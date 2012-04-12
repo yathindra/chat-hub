@@ -1,6 +1,6 @@
 #lang racket/gui
 (require racket/tcp)
-(define PORT 12345)
+(define PORT 8081)
 ;(define server-addr "localhost")
 
 
@@ -13,7 +13,8 @@
   
   ;Some Header here
   ;Sending the user name
-  (print uname out))
+  (print uname out)
+  (if (equal? (read in) "ack") (display "success") (display "no ACK")))
  
 
 ;===================================================
