@@ -83,7 +83,7 @@
         )
       (display (string-append "Signup : " username))
       (if (hash-has-key? users username)
-          (write (cons 'signin-samename (string-append username " -username has been taken")))
+          (write (cons 'signin-samename (string-append username " -username has been taken\n")))
           (begin
             (reg-user username in out)
             (set-user username)
@@ -98,12 +98,12 @@
       (define (post-action)
         (broadcast 'broadcast (string-append username " has signed out"))
         )
-      (display (string-append "Trying to sign out the user" username))
+      (display (string-append "Trying to sign out the user " username))
       (if (not (hash-has-key? users username))
-          (display (string-append "No user named " username " to sing out"))
+          (display (string-append "No user named " username " to sign out\n"))
           (begin
-            (unreg-user(username))
-            (display (string-append username " is signed out"))
+            (unreg-user username)
+            (display (string-append username " is signed out\n"))
             (post-action)
             )
           )
@@ -111,8 +111,9 @@
     
     ;return the list of users
     (define (userlist in out)
-      (define msg (cons 'listofusers (list-of-users)))
+      (define msg (list 'listofusers (list-of-users)))
       (display "Returning the list of users")
+      (thread-send (current-thread) msg)
       )
     
     ;;Handle the events by looping
@@ -149,7 +150,7 @@
         [(eq? id 'signin ) (signin (second message) in out)]
         [(eq? id 'signout) (signout (second message) in out)]
         [(eq? id 'listofusers) (userlist in out )]
-        [(eq? id 'broadcast) (broadcast 'broadcast (string-append (get-user) "says : "(second message)))]
+        [(eq? id 'broadcast) (broadcast 'broadcast (string-append (get-user) " says : "(second message)))]
         [else (begin (display id) (display "\n") (display (second message)) (display "\n")  (display (third message)) (display "\n") (display message))]
         )
       (communicate-loop)
