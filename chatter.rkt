@@ -7,27 +7,6 @@
 (define users-list '())      
 (define p2p-windows (make-hash))
 
-;p2p function here
-;(define (new-p2p t e)
-;(define (new-p2p host port uname)
-  ;(define-values (in out) (tcp-connect host port))
-  ;(file-stream-buffer-mode out 'none)
- ; (send p2p-win show #t)
-;  (display "in P2P\n")
-;  (define (test-loop)
-;    (write `(p2p-start "adi" "yathi") out)
-;    (define testmsg (read in))
-;    (match testmsg
-;    [(list 'p2p-nouser a) (display (string-append "Nouser "  a))]
-;    [(list 'p2p-success b) (display (string append "Success p2p "  b))]
-;    [eof-object (void)]
-;    [_ (error "Unexpected!!!!!")])) 
-;  (thread (lambda () (test-loop)))
-;)
-
-  
-  ;(write `(p2p--start ,
-
 ;Here the user joins
 (define (new-connection host port cmd uname)
    ;Connecting to the server here
@@ -127,7 +106,8 @@
 		     )]
     [(list 'p2p-message f m) (define target (hash-ref p2p-windows f))
                             (define tbox (car (send target get-children)))
-                            (add-to-chat m out tbox)];will append here
+                            (add-to-chat m out tbox)
+                            (send target show #t)];will append here
     [(list 'p2p-disconnect a) (display "User left in middle of chat\n")]
     [eof-object (void)]
     [_ (error "Unexpected!!!!!")]))
@@ -180,7 +160,12 @@
        (let (;[lst (send t get-selections)] 
              [msg (list-ref  users-list (car (send t get-selections)))])
          ;(define msg (list-ref  users-list (car lst))))
-        (and (not (hash-has-key? p2p-windows msg)) (thread-send listening-thread `(p2p-start ,(send name-field get-value) ,msg))) 
+        ;(and (not (hash-has-key? p2p-windows msg)) (thread-send listening-thread `(p2p-start ,(send name-field get-value) ,msg))) 
+         ;(and (not (hash-has-key? p2p-windows msg)) (thread-send listening-thread `(p2p-start ,(send name-field get-value) ,msg)))
+         (if (not (hash-has-key? p2p-windows msg))  (thread-send listening-thread `(p2p-start ,(send name-field get-value) ,msg))
+             (send (hash-ref p2p-windows msg) show #t))
+             ;(if (send (hash-ref p2p-windows msg) is-shown?) (void) (send (hash-ref p2p-windows msg) show #t)
+         ;(and (hash-has-key? p2p-windows msg) (send (hash-ref p2p-windows msg) show #t))
          ;(display "\ngot the user name from list box here!!\n")
        
   )))
