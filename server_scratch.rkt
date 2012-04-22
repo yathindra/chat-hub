@@ -112,7 +112,7 @@
     ;p2p between the users
     (define (p2p-start fromUser toUser in out)
       (display "Inside p2p-start\n")
-      (display (not (hash-has-key? users toUser)))
+      ;(display (not (hash-has-key? users toUser)))
       (if (not (hash-has-key? users toUser))
           ;true - The toUser is  not present so send a p2p-nouser message
           (thread-send  (current-thread) (list 'p2p-nouser toUser))
@@ -124,6 +124,29 @@
             (write `( p2p-success ,fromUser )(cdr (hash-ref users toUser)))
             ;(display "P2P Success\n")
             )
+          )
+      )
+    
+    ;p2p-message
+    (define (p2p-message fromUser toUser message)
+      (display "Inside p2p message\n")
+      (if (not (hash-has-key? users toUser))
+          ;true : The toUser is not available so send the fromUser that the toUser is not present
+          (thread-send (current-thread) (list 'p2p-disconnect toUser))
+          ;false the user is present so send the correct message to each chat window
+          (begin
+            (thread-send (current-thread) (list 'p2p-message toUser (string-append fromUser " says: " message)))
+            (write `(p2p-message ,fromUser ,(string-append fromUser "says: " message)) (cdr (hash-ref users toUser)))
+            )
+          )
+      )
+    
+    ;p2p-disconnect
+    (define (p2p-disconnect fromUser toUser)
+      (display "Inside p2p disconnect")
+      (if (not (hash-has-key? users toUser))
+          (display (string-append toUser " left. No action taken\n"))
+          (write `(p2p-disconnect ,fromUser) (cdr (hash-ref users toUser)))
           )
       )
     
@@ -170,6 +193,8 @@
         [(eq? id 'listofusers) (userlist in out )]
         [(eq? id 'broadcast) (broadcast 'broadcast (string-append (get-user) " says : "(second message)))]
         [(eq? id 'p2p-start) (p2p-start (second message) (third message) in out)]
+        [(eq? id 'p2p-message) (p2p-message (second message) (third message) (fourth message))]
+        [(eq? id 'p2p-disconnect) (p2p-disconnect (second message) (third message))]
         [else (begin (display id) (display "\n") (display (second message)) (display "\n")  (display (third message)) (display "\n") (display message))]
         )
       (communicate-loop)
