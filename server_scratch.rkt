@@ -135,8 +135,8 @@
           (thread-send (current-thread) (list 'p2p-disconnect toUser))
           ;false the user is present so send the correct message to each chat window
           (begin
-            (thread-send (current-thread) (list 'p2p-message toUser (string-append fromUser " says: " message)))
-            (write `(p2p-message ,fromUser ,(string-append fromUser "says: " message)) (cdr (hash-ref users toUser)))
+            (thread-send (current-thread) (list 'p2p-message toUser (string-append "Me: " message)))
+            (write `(p2p-message ,fromUser ,(string-append fromUser " says: " message)) (cdr (hash-ref users toUser)))
             )
           )
       )
