@@ -109,10 +109,28 @@
           )
       )
     
+    ;p2p between the users
+    (define (p2p-start fromUser toUser in out)
+      (display "Inside p2p-start\n")
+      (display (not (hash-has-key? users toUser)))
+      (if (not (hash-has-key? users toUser))
+          ;true - The toUser is  not present so send a p2p-nouser message
+          (thread-send  (current-thread) (list 'p2p-nouser toUser))
+          ;false - The toUser is present and send a 
+          (begin
+            ;(display "P2P-One\n")
+            (thread-send (current-thread) (list 'p2p-success toUser))
+            ;(display "P2P-Two\n")
+            (write `( p2p-success ,fromUser )(cdr (hash-ref users toUser)))
+            ;(display "P2P Success\n")
+            )
+          )
+      )
+    
     ;return the list of users
     (define (userlist in out)
       (define msg (list 'listofusers (list-of-users)))
-      (display "Returning the list of users")
+      (display "Returning the list of users\n")
       (thread-send (current-thread) msg)
       )
     
@@ -151,6 +169,7 @@
         [(eq? id 'signout) (signout (second message) in out)]
         [(eq? id 'listofusers) (userlist in out )]
         [(eq? id 'broadcast) (broadcast 'broadcast (string-append (get-user) " says : "(second message)))]
+        [(eq? id 'p2p-start) (p2p-start (second message) (third message) in out)]
         [else (begin (display id) (display "\n") (display (second message)) (display "\n")  (display (third message)) (display "\n") (display message))]
         )
       (communicate-loop)
