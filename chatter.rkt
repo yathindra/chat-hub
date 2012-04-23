@@ -74,7 +74,7 @@
   (display msg)
   (display "\n")
   (match msg
-    [(list 'signin a) (handle-error a)]
+    [(list 'signin-samename a) (display "ERRRRRRORRR")(handle-error a)]
     [(list 'broadcast-signout b) (add-to-chat b out chatbox)]
     [(list 'broadcast b) (add-to-chat b out chatbox)]
     [(list 'listofusers c) (refresh-list c)]
@@ -108,7 +108,15 @@
                             (define tbox (car (send target get-children)))
                             (add-to-chat m out tbox)
                             (send target show #t)];will append here
-    [(list 'p2p-disconnect a) (display "User left in middle of chat\n")]
+    [(list 'p2p-disconnect a)  (let* ([disconnect-dialog (instantiate dialog% ("Alert!!"))]
+                                      [msg (new message% [parent disconnect-dialog] [label "The user is offline!!"])]
+                                      [button (new button% [parent disconnect-dialog] [label "OK"]
+                                                   (callback (lambda (button event)
+                                                     (send (hash-ref p2p-windows a) show #f )
+                                                               (hash-remove! p2p-windows a) (send disconnect-dialog show #f))))]
+                                      )
+                                 (send disconnect-dialog show #t)
+                                 )]
     [eof-object (void)]
     [_ (error "Unexpected!!!!!")]))
    
@@ -116,7 +124,12 @@
 ;===================================================
 ;Dialog box for error
 (define (handle-error msg)
-(define error-dialog (instantiate dialog% (msg)))
+(define error-dialog (instantiate dialog% ("Alert!!")))
+  (define msg (new message% [parent error-dialog]
+                          [label msg]))
+  (define button (new button% [parent error-dialog] [label "OK"]
+                                                   (callback (lambda (button event)
+                                                     (send error-dialog show #f)))))
   (send error-dialog show #t)
   (send name-field set-value ""))
 
@@ -159,16 +172,9 @@
   (and (eq? (send e get-event-type) 'list-box-dclick)
        (let (;[lst (send t get-selections)] 
              [msg (list-ref  users-list (car (send t get-selections)))])
-         ;(define msg (list-ref  users-list (car lst))))
-        ;(and (not (hash-has-key? p2p-windows msg)) (thread-send listening-thread `(p2p-start ,(send name-field get-value) ,msg))) 
-         ;(and (not (hash-has-key? p2p-windows msg)) (thread-send listening-thread `(p2p-start ,(send name-field get-value) ,msg)))
-         (if (not (hash-has-key? p2p-windows msg))  (thread-send listening-thread `(p2p-start ,(send name-field get-value) ,msg))
+          (if (not (hash-has-key? p2p-windows msg))  (thread-send listening-thread `(p2p-start ,(send name-field get-value) ,msg))
              (send (hash-ref p2p-windows msg) show #t))
-             ;(if (send (hash-ref p2p-windows msg) is-shown?) (void) (send (hash-ref p2p-windows msg) show #t)
-         ;(and (hash-has-key? p2p-windows msg) (send (hash-ref p2p-windows msg) show #t))
-         ;(display "\ngot the user name from list box here!!\n")
-       
-  )))
+          )))
 
 (define main-win  (new frame%
                         [label "ChatRoom"]
